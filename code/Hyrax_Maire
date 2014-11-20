@@ -1,0 +1,61 @@
+
+from __future__ import print_function, division
+
+import numpy
+import thinkbayes2
+import thinkplot
+
+
+class Hyrax(thinkbayes2.Suite):
+    """Represents hypotheses about the population of hyraxes."""
+
+    def Likelihood(self, data, hypo):
+        """Computes the likelihood of the data under the hypothesis.
+            
+            ummm ignoring replacement and assuming our sample is small 
+            relative to the population....
+        
+        hypo: Actual # hyrax in population
+        data:  prev tagged, # caught, #tagged already in new batch 
+        """
+        #Unpack
+        N_hypo=hypo
+        t, n, k= data #prev tagged, number caught, number already tagged
+        p=t/N_hypo
+        #Eval likelihood of population for given hypo
+        if N_hypo < (t+(n-k)): #cant be less than the number of unique animals observed
+            like=0
+        else:
+            like = thinkbayes2.EvalBinomialPmf(k,n,p)
+
+        return like
+
+
+def main():
+    hypos = numpy.linspace(0, 10000, 10001)
+    suite = Hyrax(hypos)
+
+    thinkplot.Pdf(suite, label='prior')
+
+    data = 10, 10, 2
+    suite.Update(data)
+
+    thinkplot.Pdf(suite, label='posterior')
+   
+    print('Mean:', suite.Mean())
+    print('Std:', suite.Std())
+
+    data2= 18, 10, 3
+    suite.Update(data2)
+
+    thinkplot.Pdf(suite, label='posterior2')
+    
+    print('Another Batch')
+    print('Mean:', suite.Mean())
+    print('Std:', suite.Std())
+
+    thinkplot.Show()
+
+
+if __name__ == '__main__':
+    main()
