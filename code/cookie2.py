@@ -54,10 +54,12 @@ def main():
 
     pmf = Cookie(hypos)
 
-    pmf.Update('vanilla')
-
-    for hypo, prob in pmf.Items():
-        print(hypo, prob)
+    dataset=['vanilla', 'vanilla', 'chocolate']
+    for data in dataset:
+        pmf.Update(data)
+    #pmf.Update('vanilla')
+        for hypo, prob in pmf.Items():
+            print(hypo, prob)
 
 
 if __name__ == '__main__':

@@ -20,12 +20,17 @@ class Gps(thinkbayes2.Suite, thinkbayes2.Joint):
     def Likelihood(self, data, hypo):
         """Computes the likelihood of the data under the hypothesis.
 
-        hypo: 
-        data: 
+        hypo: possible actual location, (x,y)
+        data: reading
         """
-        # TODO: fill this in
-        like = 1
-        return like
+        realx,realy=hypo
+        measurex, measurey=data
+        #Error is normally distributed with mean 0 and std 30m
+        #Return likelihood of these errors occuring simultaneously
+        P_ex = thinkbayes2.EvalNormalPdf((measurex-realx), 0, 30)
+        P_ey= thinkbayes2.EvalNormalPdf((measurey-realy), 0, 30)
+        
+        return P_ex*P_ey
 
 
 def main():
@@ -33,6 +38,7 @@ def main():
     joint = Gps(product(coords, coords))
 
     joint.Update((51, -15))
+
     joint.Update((48, 90))
 
     pairs = [(11.903060613102866, 19.79168669735705),
@@ -46,8 +52,21 @@ def main():
 
     joint.UpdateSet(pairs)
 
-    # TODO: plot the marginals and print the posterior means
+    pmf1=joint.Marginal(0, label='x')
+    pmf2=joint.Marginal(1, label='y')
 
+    print('post mean x', pmf1.Mean())
+    print('post mean y', pmf2.Mean())
+    print('MAP x', pmf1.MaximumLikelihood())
+    print('MAP y', pmf2.MaximumLikelihood())
+
+    # thinkplot.Pdfs([pmf1,pmf2])
+    # thinkplot.Show()
+
+    thinkplot.Contour(joint.GetDict(), contour=False, pcolor=True)
+    thinkplot.Show(xlabel='X', ylabel='Y')
+    
+    
 
 if __name__ == '__main__':
     main()

@@ -18,10 +18,12 @@ class Soccer(thinkbayes2.Suite):
     def Likelihood(self, data, hypo):
         """Computes the likelihood of the data under the hypothesis.
 
-        hypo: 
-        data: 
+        hypo: value of lam, goals/game
+        data: time since last goal, minutes
         """
-        like = 1
+        lam=hypo
+        t=data/90 #portion of a game that has gone by
+        like = thinkbayes2.EvalExponentialPdf(t, lam)
         return like
 
     def PredRemaining(self, rem_time, score):
@@ -30,7 +32,17 @@ class Soccer(thinkbayes2.Suite):
         rem_time: remaining time in the game in minutes
         score: number of goals already scored
         """
-        # TODO: fill this in
+        metapmf=thinkbayes2.Pmf()
+        for lam, prob in self.Items():
+            lamt=lam*rem_time/90
+            pmf=thinkbayes2.MakePoissonPmf(lamt, 12)
+            #thinkplot.Pdf(pmf)
+            metapmf[pmf]=prob
+        #make mixture
+        mix=thinkbayes2.MakeMixture(metapmf)
+        mix+=score
+        thinkplot.Hist(mix)
+        thinkplot.Show()
 
 
 def main():
@@ -40,11 +52,21 @@ def main():
     thinkplot.Pdf(suite, label='prior')
     print('prior mean', suite.Mean())
 
+    suite.Update(69)
+    thinkplot.Pdf(suite, label='prior 2')
+    print('Pseudo Obs Prior', suite.Mean())
+
     suite.Update(11)
     thinkplot.Pdf(suite, label='posterior 1')
-    print('after one goal', suite.Mean())
+    print('after goal', suite.Mean())
+
+    suite.Update(12)
+    thinkplot.Pdf(suite, label='posterior 2')
+    print('after another', suite.Mean())
 
     thinkplot.Show()
+
+    suite.PredRemaining((90-23), 2)
 
 
 if __name__ == '__main__':
